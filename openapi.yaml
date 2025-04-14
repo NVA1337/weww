@@ -1,0 +1,230 @@
+openapi: 3.0.0
+info:
+  title: 'Conversations API'
+  description: 'API for managing conversations between users'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8000'
+    description: 'Local server'
+paths:
+  /conversations/:
+    get:
+      tags:
+        - Conversations
+      summary: "Get user's conversations"
+      operationId: 495c523dd2c5c59f389cf81d72a75970
+      responses:
+        '200':
+          description: "List of user's conversations"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties: { id: { description: 'Conversation ID', type: integer }, participants: { type: array, items: { properties: { id: { description: 'Participant ID', type: integer }, user: { description: 'User details', type: object } }, type: object } } }
+                  type: object
+        '401':
+          description: Unauthorized
+      security:
+        -
+          bearerAuth: []
+  /index:
+    get:
+      operationId: c7a3e07c42ef883719b986d0d3195666
+      responses:
+        '200':
+          description: 'Successful response'
+  '/messages/{id}':
+    get:
+      tags:
+        - Messages
+      summary: 'Get messages in a conversation'
+      operationId: 7e3faec67c4d1fdc061f653f9e8e0cbe
+      parameters:
+        -
+          name: id
+          in: path
+          description: 'ID of the conversation'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'List of messages in the conversation'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '403':
+          description: 'Access denied'
+        '404':
+          description: 'Conversation not found'
+      security:
+        -
+          bearerAuth: []
+    post:
+      tags:
+        - Messages
+      summary: 'Send a new message in a conversation'
+      operationId: 9ff9905960bfdeb6dd2a74fd7ea1d7f3
+      parameters:
+        -
+          name: id
+          in: path
+          description: 'ID of the conversation'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: 'Message content'
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  example: 'Hello, how are you?'
+              type: object
+      responses:
+        '201':
+          description: 'Message created successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: 'Invalid input'
+        '403':
+          description: 'Access denied'
+        '404':
+          description: 'Conversation not found'
+      security:
+        -
+          bearerAuth: []
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: 'User login'
+      operationId: e101a93a861346145c41887c6269e2f5
+      requestBody:
+        description: 'Login credentials'
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: password123
+              type: object
+      responses:
+        '302':
+          description: 'Redirect after successful login'
+          headers:
+            Location:
+              description: 'Redirect location'
+              schema:
+                type: string
+        '200':
+          description: 'Login form rendered when not authenticated'
+          content:
+            text/html:
+              schema:
+                description: 'HTML login form'
+                type: string
+        '401':
+          description: 'Invalid credentials'
+          content:
+            application/json:
+              schema:
+                properties:
+                  error: { type: string, example: 'Invalid credentials.' }
+                type: object
+  /logout:
+    post:
+      tags:
+        - Authentication
+      summary: 'User logout'
+      operationId: 2116520bb83ab7be5e8be10d6c81e3c6
+      responses:
+        '302':
+          description: 'Redirect after logout'
+          headers:
+            Location:
+              description: 'Redirect location'
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                properties:
+                  error: { type: string, example: 'Full authentication is required to access this resource.' }
+                type: object
+      security:
+        -
+          bearerAuth: []
+  /api/users:
+    get:
+      tags:
+        - Users
+      summary: 'Получить список пользователей'
+      operationId: e3c1d8b078d8aa6c9d68d3d4cc3cb904
+      responses:
+        '200':
+          description: 'Успешный ответ'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties: { id: { type: integer }, username: { type: string }, roles: { type: string }, password: { type: string } }
+                  type: object
+        '500':
+          description: 'Ошибка сервера'
+components:
+  schemas:
+    Message:
+      properties:
+        id:
+          type: integer
+          example: 1
+        content:
+          type: string
+          example: 'Hello there!'
+        createdAt:
+          type: string
+          format: date-time
+        mine:
+          description: 'Whether the message belongs to the current user'
+          type: boolean
+      type: object
+  securitySchemes:
+    bearerAuth:
+      type: http
+      bearerFormat: JWT
+      scheme: bearer
+tags:
+  -
+    name: Messages
+  -
+    name: Authentication
+  -
+    name: Users
+  -
+    name: Conversations
+    description: Conversations
