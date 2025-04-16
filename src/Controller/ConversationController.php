@@ -25,7 +25,7 @@ use Symfony\Component\Routing\Annotation\Route;
  *     description="API for managing conversations between users"
  * )
  * @OA\Server(
- *     url="http://localhost:8000",
+ *     url="https://127.0.0.1:8000/",
  *     description="Local server"
  * )
  */
@@ -92,7 +92,7 @@ final class ConversationController extends AbstractController
 
     public function index(Request $request){
     
-    $otherUser = $request->get('otherUser', 0);
+    $otherUser = $request->get('otherUser');
     $otherUser = $this->userRepository->find($otherUser);
 
     if (is_null($otherUser)) {
@@ -100,7 +100,8 @@ final class ConversationController extends AbstractController
     }
 
     // cannot create a conversation with myself
-    if ($otherUser->getId() === $this->getUser()->getId()) {
+     if ($otherUser->getId() === $this->getUser()-> getId()) {
+    // if ($otherUser->getId() === 1) {
         throw new \Exception("That's deep but you cannot create a conversation with yourself");
     }
 
@@ -108,6 +109,7 @@ final class ConversationController extends AbstractController
     $conversation = $this->conversationRepository->findConversationByParticipants(
         $otherUser->getId(),
         $this->getUser()->getId()
+        //o 1
     );
 
     if (count($conversation)) {
@@ -118,6 +120,7 @@ final class ConversationController extends AbstractController
 
     $participant = new Participant();
     $participant->setUser($this->getUser());
+    //o $participant->setUser( $this->userRepository->find(1) );
     $participant->setConversation($conversation);
 
     $otherParticipant = new Participant();
@@ -175,6 +178,7 @@ final class ConversationController extends AbstractController
     #[Route("/", name: "getConversations", methods: ['GET'])]
     public function getConvs() {
         $conversations = $this->conversationRepository->findConversationsByUser($this->getUser()->getId());
+        //o $conversations = $this->conversationRepository->findConversationsByUser(2);
         return $this->json($conversations);
     }
 

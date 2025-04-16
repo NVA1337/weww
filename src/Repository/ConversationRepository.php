@@ -47,7 +47,7 @@ class ConversationRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('c');
         $qb
-            ->select('c') // Изменено: выбираем саму беседу, а не количество
+            ->select('c') 
             ->innerJoin('c.participants', 'p')
             ->where('p.user IN (:users)')
             ->setParameter('users', [$myId, $otherUserId])

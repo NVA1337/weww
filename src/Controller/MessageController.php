@@ -108,7 +108,7 @@ final class MessageController extends AbstractController
                 'id' => $message->getId(),
                 'content' => $message->getContent(),
                 'createdAt' => $message->getCreatedAt()->format('Y-m-d H:i:s'),
-                'mine' => $message->getUser()->getId() === $this->getUser()->getId(),
+                'mine' => $message->getUser()->getId() === 1, //$this->getUser()->getId(),
             ];
         }, $messages);
     
