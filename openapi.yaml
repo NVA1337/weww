@@ -5,6 +5,9 @@ info:
   version: 1.0.0
 servers:
   -
+    url: 'https://127.0.0.1:8000/'
+    description: 'Local server'
+  -
     url: 'http://localhost:8000'
     description: 'Local server'
 paths:
@@ -196,6 +199,44 @@ paths:
                   type: object
         '500':
           description: 'Ошибка сервера'
+    post:
+      tags:
+        - Users
+      summary: 'Создать нового пользователя'
+      operationId: 96c170212f01609568831a02851d21ac
+      requestBody:
+        description: 'Данные пользователя'
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                roles:
+                  type: string
+                  default: ROLE_USER
+              type: object
+      responses:
+        '201':
+          description: 'Пользователь успешно создан'
+          content:
+            application/json:
+              schema:
+                properties:
+                  id: { type: integer }
+                  username: { type: string }
+                  roles: { type: string }
+                type: object
+        '400':
+          description: 'Некорректные данные'
+        '500':
+          description: 'Ошибка сервера'
 components:
   schemas:
     Message:
@@ -212,6 +253,29 @@ components:
         mine:
           description: 'Whether the message belongs to the current user'
           type: boolean
+      type: object
+    User:
+      description: 'Сущность пользователя'
+      required:
+        - username
+        - password
+      properties:
+        id:
+          description: 'Уникальный идентификатор'
+          type: integer
+          format: int64
+        username:
+          description: 'The username of the user'
+          type: string
+          maxLength: 180
+        roles:
+          description: 'The roles of the user'
+          type: array
+          items:
+            type: string
+        password:
+          description: 'The hashed password'
+          type: string
       type: object
   securitySchemes:
     bearerAuth:

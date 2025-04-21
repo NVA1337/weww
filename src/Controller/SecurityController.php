@@ -8,11 +8,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 /**
- * @OA\Info(
- *     title="Conversations API",
- *     version="1.0.0",
- *     description="API for managing conversations between users"
- * )
  * @OA\Tag(name="Authentication")
  */
 class SecurityController extends AbstractController

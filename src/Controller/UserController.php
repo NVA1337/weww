@@ -7,14 +7,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use PDO;
+use Symfony\Component\HttpFoundation\Request; // <-- Добавьте эту строку
+
 
 /**
- * 
- * @OA\Info(
- *     title="Conversations API",
- *     version="1.0.0",
- *     description="API for managing conversations between users"
- * )
  * @OA\Tag(name="Users")
  */
 class UserController extends AbstractController
@@ -73,6 +69,100 @@ class UserController extends AbstractController
             // Возвращаем ошибку сервера
             return $this->json([
                 'error' => 'Database error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+        /**
+     * @OA\Post(
+     *     path="/api/users",
+     *     summary="Создать нового пользователя",
+     *     tags={"Users"},
+     *     @OA\RequestBody(
+     *         description="Данные пользователя",
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"username", "password"},
+     *             @OA\Property(property="username", type="string"),
+     *             @OA\Property(property="password", type="string"),
+     *             @OA\Property(property="roles", type="string", default="ROLE_USER")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Пользователь успешно создан",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="username", type="string"),
+     *             @OA\Property(property="roles", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Некорректные данные"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Ошибка сервера"
+     *     )
+     * )
+     */
+    #[Route('/api/users', name: 'user_create', methods: ['POST'])]
+    public function create(Request $request): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            // Валидация данных
+            if (!isset($data['username']) || !isset($data['password'])) {
+                return $this->json([
+                    'error' => 'Invalid data',
+                    'message' => 'Username and password are required'
+                ], 400);
+            }
+
+            $username = $data['username'];
+            $password = password_hash($data['password'],0);
+            $roles = $data['roles'] ?? '["ROLE_USER"]';
+
+            // Подключение к базе данных
+            $db = new PDO('sqlite:' . $this->dbFile);
+            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            // Проверка на существование пользователя
+            $stmt = $db->prepare("SELECT id FROM {$this->tableName} WHERE username = ?");
+            $stmt->execute([$username]);
+            
+            if ($stmt->fetch()) {
+                return $this->json([
+                    'error' => 'User exists',
+                    'message' => 'Username already taken'
+                ], 400);
+            }
+
+            // Вставка нового пользователя
+            $stmt = $db->prepare("INSERT INTO {$this->tableName} (username, password, roles) VALUES (?, ?, ?)");
+            $stmt->execute([$username, $password, $roles]);
+
+            $userId = $db->lastInsertId();
+
+            // Возвращаем созданного пользователя
+            return $this->json([
+                'id' => $userId,
+                'username' => $username,
+                'roles' => $roles
+            ], 201, [], [
+                'json_encode_options' => JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+            ]);
+
+        } catch (\Exception $e) {
+            // Логирование ошибки
+            error_log($e->getMessage());
+            
+            // Возвращаем ошибку сервера
+            return $this->json([
+                'error' => 'Server error',
                 'message' => $e->getMessage()
             ], 500);
         }

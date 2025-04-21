@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8090:80"
+    volumes:
+      - .:/var/www/symfony
+    environment:
+      - APP_ENV=dev

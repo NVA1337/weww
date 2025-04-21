@@ -16,11 +16,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Annotations as OA;
 
 /**
- * @OA\Info(
- *     title="Conversations API",
- *     version="1.0.0",
- *     description="API for managing conversations between users"
- * )
  * @OA\Server(
  *     url="http://localhost:8000",
  *     description="Local server"
@@ -108,7 +103,7 @@ final class MessageController extends AbstractController
                 'id' => $message->getId(),
                 'content' => $message->getContent(),
                 'createdAt' => $message->getCreatedAt()->format('Y-m-d H:i:s'),
-                'mine' => $message->getUser()->getId() === 1, //$this->getUser()->getId(),
+                'mine' => $message->getUser()->getId() === $this->getUser()->getId(),
             ];
         }, $messages);
     

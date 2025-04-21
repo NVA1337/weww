@@ -24,7 +24,9 @@ security:
                 path: app_logout
                 # where to redirect after logout
                 # target: app_any_route
-
+            json_login:
+                # api_login is a route we will create below
+                check_path: api_login
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
 
