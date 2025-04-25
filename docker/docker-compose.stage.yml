@@ -1,0 +1,64 @@
+version:  '3.7'
+
+networks:
+  demo:
+    external: true
+
+services:
+  ms_notification:
+    container_name: ms_notification
+    build: dockerfile/php
+    restart: on-failure
+    volumes:
+      - ../app:/var/www/html
+      - ../app/vendor:/var/www/html/vendor
+    expose:
+      - "9000"
+    links:
+      - db_notific
+    networks:
+      - demo
+
+  nginx_notification:
+    container_name: nginx_notific
+    image: nginx:latest
+    restart: on-failure
+    expose:
+      - "80"
+    volumes:
+      - ../app:/var/www/html
+      - ./logs/nginx:/var/log/nginx
+      - ./config/nginx:/etc/nginx/conf.d
+    links:
+      - ms_notification
+    networks:
+      - demo
+
+  db_notific:
+    container_name: db_notific
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    environment:
+      - POSTGRES_NAME=db_notification
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=admin
+    image: postgres:14.3-alpine
+    networks:
+      - demo
+
+  message_consumer_notific:
+    container_name: message_consumer_notific
+    env_file:
+      - ../app/.env
+    build: dockerfile/php
+    volumes:
+      - ../app:/var/www/html
+      - ../app/vendor:/var/www/html/vendor
+    restart: unless-stopped
+    networks:
+      - demo
+    command: [ "php", "bin/console", "messenger:consume", "async", "-vv", "--memory-limit=128M", "--limit=30", "--queues=ms_notific" ]
+    links:
+      - db_notific
